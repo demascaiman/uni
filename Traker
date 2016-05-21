@@ -1,0 +1,304 @@
+package entregable2v_1;
+
+import java.io.File;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import javafx.collections.ObservableList;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import jgpx.model.analysis.Chunk;
+import jgpx.model.analysis.TrackData;
+import jgpx.model.gpx.Track;
+import jgpx.model.jaxb.GpxType;
+import jgpx.model.jaxb.TrackPointExtensionT;
+
+// @author DanielVicente
+public class Traker2 {
+
+    List<Track> listadetracks = new ArrayList<Track>();
+    int trackactual = 0;   //Puntero al Trak Actual
+    int totaltraks = 0;    //TRAKS DENTRO DEL ARRAY
+
+    TrackData datactual;
+    //Atributos:   
+    double distotal = 0;     //Distancia Total
+    int procp = 0;          // Promedio latidos por minuto
+    LocalDateTime inicio;          //Fecha de Inicio
+    Duration duracion; //Duracion del Track
+    Duration movimiento;   //TIEMPO en movimiento    Duration movimiento;   //TIEMPO en movimiento
+    double provel = 0.0;   //Velocidad Promedio
+    double procad = 0.0;   //Promedio de Cadencia
+    double ascen = 0.0;    //Ascenso Acumulado
+    double descen = 0.0;  //Descenso Acumulado
+    double vmax = 0.0;    //velicidad maxima
+    double fcmax = 0.0; // fcmaxima
+    double fcmin = 0.0; // fc minima
+    double cadmax = 0.0; //cadencia de pedaleo máxima
+    int numeropuntos = 0;
+
+    //Grafico de Tarta Zonas
+    double zona1 = 0.0;   // Recuperacion
+    double zona2 = 0.0;   //Fondo
+    double zona3 = 0.0;   //TEMPO
+    double zona4 = 0.0;   //UMBRAL
+    double zona5 = 0.0;   //Anaerobico
+
+    ///Arrays
+    double velocidadtrack[];
+    double distanciatrack[];
+    int fctrack1[];
+    int fctrack2[];
+    double alturatrack1[];
+    double alturatrack2[];
+    double cadenciatrack1[];
+    double cadenciatrack2[];
+
+    public void insertrack(File f) throws JAXBException {
+        JAXBContext jaxbContext = JAXBContext.newInstance(GpxType.class, TrackPointExtensionT.class);
+        Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+        JAXBElement<Object> root = (JAXBElement<Object>) unmarshaller.unmarshal(f);
+        GpxType gpx = (GpxType) root.getValue();
+        listadetracks.add(new Track(gpx.getTrk().get(0)));
+        datactual = new TrackData(listadetracks.get(trackactual));
+        //Extrae el track del file y lo inserta en el ArrayList
+    }
+
+    public void nextrack() {
+        trackactual++;  //Actualizara el track Actual 
+        rellenararrays();
+    }
+
+    public void actdatostrack() {
+        // TrackData datactual = new TrackData(listadetracks.get(trackactual));
+        distotal = datactual.getTotalDistance();     //Distancia Total
+        procp = datactual.getAverageHeartrate();          // Promedio latidos por minuto
+        inicio = datactual.getStartTime();          //Fecha de Inicio
+        duracion = datactual.getTotalDuration(); //Duracion del Track
+        movimiento = datactual.getMovingTime();   //TIEMPO en movimiento
+        provel = datactual.getAverageSpeed();   //Velocidad Promedio
+        procad = datactual.getAverageCadence();   //Promedio de Cadencia
+        ascen = datactual.getTotalAscent();    //Ascenso Acumulado
+        descen = datactual.getTotalDescend();  //Descenso Acumulado
+        vmax = datactual.getMaxSpeed(); //Velocidad máxima
+        fcmax = datactual.getMaxHeartrate(); // Frecuencia cardiaca maxima
+        fcmin = datactual.getMinHeartRate();  // frecuencia cardiaca minima
+        cadmax = datactual.getMaxCadence(); // cadencia de pedaleo maxima
+        numeropuntos = datactual.getNumPoints(); //Numero de puntos de la ruta
+
+    }
+
+    public void rellenararrays() {
+        ObservableList<Chunk> listadechungos = datactual.getChunks();
+        velocidadtrack = new double[datactual.getNumPoints()];/*OK*/
+        distanciatrack = new double[datactual.getNumPoints()];/*OK*/
+        fctrack1 = new int[datactual.getNumPoints()];/*OK*/
+        fctrack2 = new int[datactual.getNumPoints()];/*OK*/
+        alturatrack1 = new double[datactual.getNumPoints()];/*OK*/
+        alturatrack2 = new double[datactual.getNumPoints()];/*OK*/
+        cadenciatrack1 = new double[datactual.getNumPoints()];/*OK*/
+        cadenciatrack2 = new double[datactual.getNumPoints()];/*OK*/
+
+
+
+    }
+    
+    public void rellenarvelocidad(){
+        ObservableList<Chunk> listadechungos = datactual.getChunks();
+        for (int i = 0; i < datactual.getNumPoints(); i++) {   //Se rellenan los arrays con los datos del trackdata
+            Chunk auxchunk = listadechungos.get(i);
+            velocidadtrack[i] = auxchunk.getSpeed();
+       }
+    }
+    
+    public void rellenardistancia(){
+    ObservableList<Chunk> listadechungos = datactual.getChunks();
+        for (int i = 0; i < datactual.getNumPoints(); i++) {   //Se rellenan los arrays con los datos del trackdata
+            Chunk auxchunk = listadechungos.get(i);
+            if (i == 0) {
+                distanciatrack[i] = (auxchunk.getDistance());
+            } else {
+                distanciatrack[i] = distanciatrack[i - 1] + ((auxchunk.getDistance()));
+            }
+           
+       }}
+    public void rellenarfctrack(){ObservableList<Chunk> listadechungos = datactual.getChunks();
+        for (int i = 0; i < datactual.getNumPoints(); i++) {   //Se rellenan los arrays con los datos del trackdata
+            Chunk auxchunk = listadechungos.get(i);
+            fctrack1[i] = auxchunk.getFirstPoint().getTrackPointExtension().getHeartRate();
+            fctrack2[i] = auxchunk.getLastPoint().getTrackPointExtension().getHeartRate();
+
+       }}
+    public void rellenaraltura(){ObservableList<Chunk> listadechungos = datactual.getChunks();
+        for (int i = 0; i < datactual.getNumPoints(); i++) {   //Se rellenan los arrays con los datos del trackdata
+            Chunk auxchunk = listadechungos.get(i);
+            alturatrack1[i] = auxchunk.getFirstPoint().getElevation();
+            alturatrack2[i] = auxchunk.getLastPoint().getElevation();
+
+       }}
+    
+    public void rellenarcadencia(){
+    ObservableList<Chunk> listadechungos = datactual.getChunks();
+        for (int i = 0; i < datactual.getNumPoints(); i++) {   //Se rellenan los arrays con los datos del trackdata
+            Chunk auxchunk = listadechungos.get(i);
+            
+        cadenciatrack1[i] = auxchunk.getFirstPoint().getTrackPointExtension().getCadence();
+            cadenciatrack2[i] = auxchunk.getLastPoint().getTrackPointExtension().getCadence();
+
+       }}
+    
+    
+
+    public void zonas() {
+        double act = 0;
+        rellenarfctrack();
+        for (int i = 0; i < (numeropuntos); i++) {
+            act = (100 * getFctrack(i)) / fcmax;
+
+            if (act < 60) {
+                zona1++;
+            }
+            if (act >= 60 && act < 70) {
+                zona2++;
+            }
+            if (act >= 70 && act < 80) {
+                zona3++;
+            }
+            if (act >= 80 && act < 90) {
+                zona4++;
+            }
+            if (act >= 90) {
+                zona5++;
+            }
+        }
+    }
+
+//Consultores (Guetters)
+    public int getTrackactual() {
+        return trackactual;
+    }
+
+    public int getTotaltraks() {
+        return totaltraks;
+    }
+
+    public String getDistotal() {
+        return Double.toString(Math.round(distotal/1000))+" Km.";
+    }
+
+    public String getProcp() {
+        return Integer.toString(procp)+" ped/m";
+    }
+
+    public String getInicio() {
+        return inicio.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+    }
+
+    public String getDuracion() {
+     //  long aux=duracion; //.getSeconds()/3600;
+        return duracion.toString().substring(2)+" h/m/s";
+    }
+
+    public String getMovimiento() {
+        //String aux1 =(movimiento.getSeconds())/3600+" Horas";
+        return movimiento.toString().substring(2);
+    }
+
+    public String getProvel() {
+        return Double.toString(Math.round(procp))+" Km/h.";
+    }
+
+    public String getProcad() {
+        return Double.toString(procad)+" ped/m.";
+    }
+
+    public String getAscen() {
+        return Double.toString(Math.round(ascen))+" m.";
+    }
+
+    public String getDescen() {
+      return Double.toString(Math.round(descen))+" m.";
+    }
+
+
+    public double getVelocidadtrack(int i) {
+
+        return velocidadtrack[i];
+    }
+
+    public double getDistanciatrack(int i) {
+        return distanciatrack[i];
+    }
+
+    public int getFctrack(int i) {
+        int aux[] = new int[numeropuntos * 2];
+        for (int j = 0; j < numeropuntos; j++) {
+            aux[j] = fctrack1[j];
+            aux[j + 1] = fctrack2[j];
+        }
+        return aux[i];
+    }
+
+    public double getAlturatrack(int i) {
+        double aux[] = new double[numeropuntos * 2];
+        for (int j = 0; j < numeropuntos; j = j + 2) {
+            aux[j] = alturatrack1[j];
+            aux[j + 1] = alturatrack2[j];
+        }
+        return aux[i];
+    }
+
+    public double getCadenciatrack(int i) {
+        double aux[] = new double[numeropuntos * 2];
+        for (int j = 0; j < numeropuntos; j = j + 2) {
+            aux[j] = cadenciatrack1[j];
+            aux[j + 1] = cadenciatrack2[j];
+        }
+        return aux[i];
+    }
+
+    public int getNumeropuntos() {
+        return numeropuntos;
+    }
+
+    public String getVmax() {
+        return Double.toString(Math.round(vmax))+" Km/h";
+    }
+
+    public String getFcmax() {
+        return Double.toString(fcmax)+" ppm";
+    }
+
+    public String getFcmin() {
+        return Double.toString(fcmin)+" ppm";
+    }
+
+    public String getCadmax() {
+        return Double.toString(cadmax)+" ped/min";
+    }
+
+    public double getZona1() {
+        return zona1;
+    }
+
+    public double getZona2() {
+        return zona2;
+    }
+
+    public double getZona3() {
+        return zona3;
+    }
+
+    public double getZona4() {
+        return zona4;
+    }
+
+    public double getZona5() {
+        return zona5;
+    }
+
+}
